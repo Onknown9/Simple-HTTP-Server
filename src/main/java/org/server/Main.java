@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-
+import java.io.InputStream;
 
 
 public class Main {
@@ -17,7 +17,8 @@ public class Main {
         public static void main(String[] args) {
 
         LOGGER.info("Server is running");
-        ConfigurationManager.getInstance().loadConfigurationFile("src/main/resources/http.json");
+        InputStream inputStream = Main.class.getClassLoader().getResourceAsStream("http.json");
+        ConfigurationManager.getInstance().loadConfigurationFile(inputStream);
         Configuration conf = ConfigurationManager.getInstance().getCurrentConfiguration();
 
         LOGGER.info("Using port: {}", conf.getPort());

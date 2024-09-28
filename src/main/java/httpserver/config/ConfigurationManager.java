@@ -5,9 +5,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import httpserver.util.Json;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 
 public class ConfigurationManager {
 
@@ -23,29 +23,29 @@ public class ConfigurationManager {
         return myConfigurationManager;
     }
 
-    // Used to load a config file by path provided
-    public void loadConfigurationFile(String filePath) {
-        FileReader fileReader = null;
-        try {
-            fileReader = new FileReader(filePath);
-        } catch (FileNotFoundException e) {
-            throw new HttpConfigurationException(e);
+    // Used to load a config file from an InputStream
+    public void loadConfigurationFile(InputStream inputStream) {
+        if (inputStream == null) {
+            throw new HttpConfigurationException("InputStream is null");
         }
-        StringBuffer sb = new StringBuffer();
-      int i;
-      try{
-          while ( ( i= fileReader.read()) != -1){
-              sb.append((char)i);
-          }
-      }catch(IOException e){
-          throw new HttpConfigurationException(e);
-      }
-        JsonNode conf = null;
+
+        StringBuilder sb = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                sb.append(line);
+            }
+        } catch (IOException e) {
+            throw new HttpConfigurationException("Error reading the config file", e);
+        }
+
+        JsonNode conf;
         try {
             conf = Json.parse(sb.toString());
         } catch (IOException e) {
             throw new HttpConfigurationException("Error parsing the config file", e);
         }
+
         try {
             myCurrentConfiguration = Json.fromJson(conf, Configuration.class);
         } catch (JsonProcessingException e) {
@@ -53,10 +53,10 @@ public class ConfigurationManager {
         }
     }
 
-    // Returns current loaded config
-    public Configuration getCurrentConfiguration(){
+    // Returns the currently loaded configuration
+    public Configuration getCurrentConfiguration() {
         if (myCurrentConfiguration == null) {
-            throw new HttpConfigurationException("No set configuration");
+            throw new HttpConfigurationException("No configuration set");
         }
         return myCurrentConfiguration;
     }
